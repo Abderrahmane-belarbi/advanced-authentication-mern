@@ -6,14 +6,9 @@ import {
   generateVerificationTokenExpiresAt,
 } from "../utils/generate-verification-token.js";
 import { generateTokenSetCookie } from "../utils/generate-token-cookie.js";
-import { sendEmail } from "../utils/send-email.js";
 import { UAParser } from "ua-parser-js";
+import { sendMail } from "../config/google-mailer.js";
 
-function sendEmailInBackground(emailPayload, errorContext) {
-  void sendEmail(emailPayload).catch((emailError) => {
-    console.error(`${errorContext}:`, emailError);
-  });
-}
 
 export async function checkAuth(req, res) {
   try {
@@ -73,22 +68,11 @@ export async function signup(req, res) {
     }
 
     // Don't block signup response on external SMTP/provider availability.
-    sendEmailInBackground({
+    sendMail({
       to: createdUser.email,
       subject: "Verify your email",
       text: `Your verification code is ${verificationToken}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Email Verification</h2>
-          <p>Thank you for signing up! Please use the verification code below to verify your email address:</p>
-          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
-            ${verificationToken}
-          </div>
-          <p>This code will expire in 15 minutes.</p>
-          <p>If you didn't create an account, please ignore this email.</p>
-        </div>
-      `,
-    }, "Failed to send verification email");
+    });
 
     return res.status(201).json({
       message: "User created successfully, Please verify your email.",
@@ -197,21 +181,11 @@ export async function resendVerificationEmail(req, res) {
     user.verificationResendAvailableAt = new Date(Date.now() + resetCooldown * 1000);
     await user.save();
 
-    sendEmailInBackground({
+    sendMail({
       to: user.email,
       subject: "Verify your email",
       text: `Your verification code is ${verificationToken}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Email Verification</h2>
-          <p>Use the verification code below to verify your email address:</p>
-          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
-            ${verificationToken}
-          </div>
-          <p>This code will expire in 15 minutes.</p>
-        </div>
-      `,
-    }, "Failed to resend verification email");
+    });
     return res
       .status(200)
       .json({ message: "Verification code resent successfully. It may take up to a minute to arrive." });
@@ -299,43 +273,11 @@ export async function forgotPassword(req, res) {
       // Send the raw token to the user in the link
       // When user comes back with raw token, you hash it and compare to DB
       const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetPasswordToken}`;
-      sendEmailInBackground({
+      sendMail({
         to: user.email,
         subject: "Reset your password",
-        text: `You requested a password reset. Use this link to reset your password: ${resetUrl} (expires in 10 minutes). If you didn't request this, ignore this email.`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.5;">
-            <h2 style="margin-bottom: 8px;">Reset your password</h2>
-            <p style="margin-top: 0;">
-              We received a request to reset your password. Click the button below to choose a new one.
-            </p>
-
-            <div style="text-align: center; margin: 24px 0;">
-              <a href="${resetUrl}"
-                style="display: inline-block; background: #111827; color: #ffffff; padding: 12px 18px; border-radius: 10px; text-decoration: none; font-weight: 600;">
-                Reset Password
-              </a>
-            </div>
-
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-              This link expires in <b>10 minutes</b>.
-            </p>
-
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-              If the button doesn’t work, copy and paste this link into your browser:
-            </p>
-            <p style="font-size: 14px; word-break: break-all; margin-top: 8px;">
-              <a href="${resetUrl}">${resetUrl}</a>
-            </p>
-
-            <p style="color: #6b7280; font-size: 14px; margin-top: 18px;">
-              If you didn’t request a password reset, you can safely ignore this email.
-            </p>
-          </div>
-        `,
-      }, "Failed to send reset password email");
+        text: `You requested a password reset. Use this link to reset your password:\n${resetUrl} (expires in 10 minutes).\nIf you didn't request this, ignore this email.`,
+      });
     }
 
     return res
