@@ -62,33 +62,34 @@ export async function signup(req, res) {
       }
     });
 
-    if (createdUser) {
-      try {
-        // Send Verification Email
-        await sendEmail({
-          to: createdUser.email,
-          subject: "Verify your email",
-          text: `Your verification code is ${verificationToken}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>Email Verification</h2>
-              <p>Thank you for signing up! Please use the verification code below to verify your email address:</p>
-              <div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
-                ${verificationToken}
-              </div>
-              <p>This code will expire in 15 minutes.</p>
-              <p>If you didn't create an account, please ignore this email.</p>
-            </div>
-          `,
-        });
-      } catch (emailError) {
-        console.error("Failed to send verification email:", emailError);
-      }
-
-      return res.status(201).json({
-        message: "User created successfully, Please verify your email.",
-      });
+    if (!createdUser) {
+      return res.status(500).json({ message: "Failed to create user" });
     }
+
+    // Don't block signup response on external SMTP provider availability.
+    void sendEmail({
+      to: createdUser.email,
+      subject: "Verify your email",
+      text: `Your verification code is ${verificationToken}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Email Verification</h2>
+          <p>Thank you for signing up! Please use the verification code below to verify your email address:</p>
+          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
+            ${verificationToken}
+          </div>
+          <p>This code will expire in 15 minutes.</p>
+          <p>If you didn't create an account, please ignore this email.</p>
+        </div>
+      `,
+    }).catch((emailError) => {
+      console.error("Failed to send verification email:", emailError);
+    });
+
+    return res.status(201).json({
+      message: "User created successfully, Please verify your email.",
+    });
+
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -101,11 +102,6 @@ export async function login(req, res) {
   const browser = parser.getBrowser().name;
   const os = parser.getOS().name;
   const device = parser.getDevice().type || "desktop";
-  console.log("userAgent:", userAgent);
-  console.log("ipAddress:", ipAddress);
-  console.log("browser:", browser);
-  console.log("os:", os);
-  console.log("deviceType:", device);
   try {
     const { email, password } = req.body;
     if (!email || !password)

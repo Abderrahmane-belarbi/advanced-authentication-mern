@@ -5,12 +5,22 @@ import authRoutes from "./routes/auth-routes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
+import { verifyMailerConnection } from "./config/mailer.js";
 
 const app = express();
 
 const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
-app.use(cors({origin: "http://localhost:3000", credentials: true})); // to allow cross-origin requests
+const allowedOrigins = [
+  "http://localhost:3000",
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true, // to allow cross-origin requests
+}));
+
 
 // Express middleware that parses incoming JSON request bodies.
 app.use(express.json()); // to parse incoming requests with JSON payloads (req.body)
@@ -30,6 +40,7 @@ if(process.env.NODE_ENV === "production") {
 
 async function start() {
   await connectToDatabase();
+  await verifyMailerConnection();
   app.listen(PORT, () => {
     console.log(`Server is up on port: ${PORT}`);
   });

@@ -15,3 +15,12 @@ export const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
 });
+
+export async function verifyMailerConnection() {
+  try {
+    await transporter.verify();
+    console.log("SMTP server is reachable and ready to send emails");
+  } catch (error) {
+    console.error("SMTP verification failed. Signup may work but email delivery will fail on this deployment:", error.message);
+  }
+}

@@ -2,6 +2,19 @@ import { create } from "zustand";
 
 const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/auth" : "/api/auth";
 
+const REQUEST_TIMEOUT_MS = Number(import.meta.env.VITE_API_REQUEST_TIMEOUT_MS || 15000);
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export const useAuth = create((set) => ({
   user: null,
   isAuthenticated: false,
@@ -38,7 +51,7 @@ export const useAuth = create((set) => ({
   signup: async (email, password, name) => {
     set({ isLoading: true, error: null, message: null });
     try {
-      const res = await fetch(`${API_URL}/signup`, {
+      const res = await fetchWithTimeout(`${API_URL}/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -59,7 +72,10 @@ export const useAuth = create((set) => ({
         throw new Error(errorMessage);
       }
     } catch (error) {
-      const errorMessage = error.message || "Error signing up";
+      const errorMessage = error.name === "AbortError"
+        ? "Signup request timed out. Check server logs for SMTP/DB connectivity on Render."
+        : (error.message || "Error signing up");
+        console.log(errorMessage);
       set({ error: errorMessage })
       // for the frontend error to skip navigation to verify email
         throw new Error(errorMessage);
