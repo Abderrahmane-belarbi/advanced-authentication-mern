@@ -1,26 +1,51 @@
 import nodemailer from "nodemailer";
 
+const smtpHost = process.env.SMTP_HOST;
+const smtpUser = process.env.SMTP_USER;
+const smtpPass = process.env.SMTP_PASS;
 const smtpPort = Number(process.env.SMTP_PORT || 465);
+const smtpFallbackPort = Number(process.env.SMTP_FALLBACK_PORT || 587);
 
-export const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: smtpPort,
-  secure: smtpPort === 465,
-  connectionTimeout: 10_000,
-  greetingTimeout: 10_000,
-  socketTimeout: 10_000,
-  debug: process.env.NODE_ENV === "development",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+function buildTransporter(port) {
+  return nodemailer.createTransport({
+    host: smtpHost,
+    port,
+    // 465 expects implicit TLS, while 587 typically upgrades via STARTTLS.
+    secure: port === 465,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 10_000,
+    debug: process.env.NODE_ENV === "development",
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  });
+}
+
+export const primaryTransporter = buildTransporter(smtpPort);
+
+const shouldUseFallbackTransport = smtpFallbackPort !== smtpPort;
+export const fallbackTransporter = shouldUseFallbackTransport
+  ? buildTransporter(smtpFallbackPort)
+  : null;
 
 export async function verifyMailerConnection() {
   try {
-    await transporter.verify();
-    console.log("SMTP server is reachable and ready to send emails");
-  } catch (error) {
-    console.error("SMTP verification failed. Signup may work but email delivery will fail on this deployment:", error.message);
+    await primaryTransporter.verify();
+    console.log(`SMTP primary connection OK (${smtpHost}:${smtpPort})`);
+  } catch (primaryError) {
+    console.error(`SMTP primary connection failed (${smtpHost}:${smtpPort}):`, primaryError.message);
+
+    if (!fallbackTransporter) {
+      return;
+    }
+
+    try {
+      await fallbackTransporter.verify();
+      console.log(`SMTP fallback connection OK (${smtpHost}:${smtpFallbackPort})`);
+    } catch (fallbackError) {
+      console.error(`SMTP fallback connection failed (${smtpHost}:${smtpFallbackPort}):`, fallbackError.message);
+    }
   }
 }
