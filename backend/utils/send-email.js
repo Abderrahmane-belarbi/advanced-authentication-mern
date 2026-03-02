@@ -36,6 +36,37 @@ function formatSmtpError(error) {
   return parts.join(" | ");
 }
 
+async function sendWithResendApi(payload, timeoutMs) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+
+  const request = fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: payload.from,
+      to: [payload.to],
+      subject: payload.subject,
+      text: payload.text,
+      html: payload.html,
+    }),
+  });
+
+  const response = await withTimeout(request, timeoutMs, "Resend API send");
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const apiMessage = body?.message || body?.error || response.statusText || "Unknown error";
+    throw new Error(`Resend API error ${response.status}: ${apiMessage}`);
+  }
+
+  return body;
+}
+
 export async function sendEmail({ to, subject, text, html }) {
   const timeoutMs = Number(process.env.SMTP_SEND_TIMEOUT_MS || 30_000);
 
@@ -46,6 +77,14 @@ export async function sendEmail({ to, subject, text, html }) {
     text,
     html,
   };
+
+  if (process.env.RESEND_API_KEY) {
+    try {
+      return await sendWithResendApi(payload, timeoutMs);
+    } catch (resendError) {
+      console.error("Resend API send failed, retrying on SMTP:", resendError.message);
+    }
+  }
 
   try {
     return await sendWithTransporter(primaryTransporter, payload, timeoutMs, "SMTP primary send");

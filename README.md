@@ -56,6 +56,10 @@ SMTP_HOST=smtp.mailtrap.io
 SMTP_PORT=2525
 SMTP_USER=your_smtp_username
 SMTP_PASS=your_smtp_password
+MAIL_FROM="Auth <no-reply@example.com>"
+
+# Optional: preferred for production on hosts that block SMTP ports
+RESEND_API_KEY=re_xxxxxxxxx
 
 VERIFICATION_RESEND_COOLDOWN_SECONDS=60
 ```

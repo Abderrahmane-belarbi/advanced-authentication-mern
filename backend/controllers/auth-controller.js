@@ -9,6 +9,12 @@ import { generateTokenSetCookie } from "../utils/generate-token-cookie.js";
 import { sendEmail } from "../utils/send-email.js";
 import { UAParser } from "ua-parser-js";
 
+function sendEmailInBackground(emailPayload, errorContext) {
+  void sendEmail(emailPayload).catch((emailError) => {
+    console.error(`${errorContext}:`, emailError);
+  });
+}
+
 export async function checkAuth(req, res) {
   try {
     const user = await User.findById(req.userId).select("-password");
@@ -66,8 +72,8 @@ export async function signup(req, res) {
       return res.status(500).json({ message: "Failed to create user" });
     }
 
-    // Don't block signup response on external SMTP provider availability.
-    void sendEmail({
+    // Don't block signup response on external SMTP/provider availability.
+    sendEmailInBackground({
       to: createdUser.email,
       subject: "Verify your email",
       text: `Your verification code is ${verificationToken}`,
@@ -82,9 +88,7 @@ export async function signup(req, res) {
           <p>If you didn't create an account, please ignore this email.</p>
         </div>
       `,
-    }).catch((emailError) => {
-      console.error("Failed to send verification email:", emailError);
-    });
+    }, "Failed to send verification email");
 
     return res.status(201).json({
       message: "User created successfully, Please verify your email.",
@@ -193,7 +197,7 @@ export async function resendVerificationEmail(req, res) {
     user.verificationResendAvailableAt = new Date(Date.now() + resetCooldown * 1000);
     await user.save();
 
-    await sendEmail({
+    sendEmailInBackground({
       to: user.email,
       subject: "Verify your email",
       text: `Your verification code is ${verificationToken}`,
@@ -207,10 +211,10 @@ export async function resendVerificationEmail(req, res) {
           <p>This code will expire in 15 minutes.</p>
         </div>
       `,
-    });
+    }, "Failed to resend verification email");
     return res
       .status(200)
-      .json({ message: "Verification code resent successfully" });
+      .json({ message: "Verification code resent successfully. It may take up to a minute to arrive." });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -295,7 +299,7 @@ export async function forgotPassword(req, res) {
       // Send the raw token to the user in the link
       // When user comes back with raw token, you hash it and compare to DB
       const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetPasswordToken}`;
-      await sendEmail({
+      sendEmailInBackground({
         to: user.email,
         subject: "Reset your password",
         text: `You requested a password reset. Use this link to reset your password: ${resetUrl} (expires in 10 minutes). If you didn't request this, ignore this email.`,
@@ -331,7 +335,7 @@ export async function forgotPassword(req, res) {
             </p>
           </div>
         `,
-      });
+      }, "Failed to send reset password email");
     }
 
     return res
