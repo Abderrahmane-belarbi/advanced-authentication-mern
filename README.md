@@ -59,7 +59,10 @@ SMTP_PASS=your_smtp_password
 MAIL_FROM="Auth <no-reply@example.com>"
 
 # Optional: preferred for production on hosts that block SMTP ports
+EMAIL_TRANSPORT=auto
+# use resend|smtp|auto (auto = resend first when key exists, otherwise smtp)
 RESEND_API_KEY=re_xxxxxxxxx
+RESEND_EMAIL_FROM="Auth <onboarding@resend.dev>"
 
 VERIFICATION_RESEND_COOLDOWN_SECONDS=60
 ```

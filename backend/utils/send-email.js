@@ -1,4 +1,5 @@
 import { fallbackTransporter, primaryTransporter } from "../config/mailer.js";
+import { resendMailer } from "../config/resend-mailer.js";
 
 async function withTimeout(promise, timeoutMs, label) {
   let timeoutId;
@@ -14,6 +15,10 @@ async function withTimeout(promise, timeoutMs, label) {
 }
 
 async function sendWithTransporter(transporter, payload, timeoutMs, label) {
+  if (!transporter) {
+    throw new Error(`${label} unavailable: SMTP transporter is not configured`);
+  }
+
   return withTimeout(transporter.sendMail(payload), timeoutMs, label);
 }
 
@@ -37,38 +42,15 @@ function formatSmtpError(error) {
 }
 
 async function sendWithResendApi(payload, timeoutMs) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    return null;
-  }
-
-  const request = fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: payload.from,
-      to: [payload.to],
-      subject: payload.subject,
-      text: payload.text,
-      html: payload.html,
-    }),
-  });
-
-  const response = await withTimeout(request, timeoutMs, "Resend API send");
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const apiMessage = body?.message || body?.error || response.statusText || "Unknown error";
-    throw new Error(`Resend API error ${response.status}: ${apiMessage}`);
-  }
-
-  return body;
+  return withTimeout(resendMailer(payload), timeoutMs, "Resend API send");
 }
 
 export async function sendEmail({ to, subject, text, html }) {
   const timeoutMs = Number(process.env.SMTP_SEND_TIMEOUT_MS || 30_000);
+  const emailTransport = (process.env.EMAIL_TRANSPORT || "auto").toLowerCase();
+  const shouldTryResend =
+    emailTransport === "resend" || (emailTransport === "auto" && Boolean(process.env.RESEND_API_KEY));
+  const shouldTrySmtp = emailTransport === "smtp" || emailTransport === "auto";
 
   const payload = {
     from: process.env.MAIL_FROM,
@@ -78,12 +60,19 @@ export async function sendEmail({ to, subject, text, html }) {
     html,
   };
 
-  if (process.env.RESEND_API_KEY) {
+  if (shouldTryResend) {
     try {
       return await sendWithResendApi(payload, timeoutMs);
     } catch (resendError) {
+      if (!shouldTrySmtp) {
+        throw resendError;
+      }
       console.error("Resend API send failed, retrying on SMTP:", resendError.message);
     }
+  }
+
+  if (!shouldTrySmtp) {
+    throw new Error(`EMAIL_TRANSPORT is set to '${emailTransport}' but no valid sender is configured`);
   }
 
   try {

@@ -10,8 +10,13 @@ const smtpGreetingTimeout = Number(process.env.SMTP_GREETING_TIMEOUT_MS || 30_00
 const smtpSocketTimeout = Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 30_000);
 const smtpDnsTimeout = Number(process.env.SMTP_DNS_TIMEOUT_MS || 15_000);
 const smtpAllowSelfSigned = process.env.SMTP_TLS_REJECT_UNAUTHORIZED === "false";
+const smtpConfigured = Boolean(smtpHost && smtpUser && smtpPass);
 
 function buildTransporter(port) {
+  if (!smtpConfigured) {
+    return null;
+  }
+
   const secure = port === 465;
   return nodemailer.createTransport({
     host: smtpHost,
@@ -45,6 +50,11 @@ export const fallbackTransporter = shouldUseFallbackTransport
   : null;
 
 export async function verifyMailerConnection() {
+  if (!smtpConfigured) {
+    console.log("SMTP is not configured. Skipping SMTP connection verification.");
+    return;
+  }
+
   try {
     await primaryTransporter.verify();
     console.log(`SMTP primary connection OK (${smtpHost}:${smtpPort})`);
