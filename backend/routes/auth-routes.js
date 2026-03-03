@@ -16,7 +16,7 @@ router.post("/resend-verification-email", resendVerificationEmail);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 
-router.put("/update-profile", updateProfile);
+router.put("/update-profile", verifyToken, updateProfile);
 
 
 export default router;
