@@ -258,5 +258,29 @@ export const useAuth = create((set) => ({
     } finally {
       set({ isLoading: false })
     }
+  },
+  updateProfile: async(input) => {
+    set({ isLoading: true, error: null, message: null });
+    try {
+      const res = await fetch(`${API_URL}/update-profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify(input)
+      });
+      const data = await res.json();
+      if(!res.ok) {
+        set({ error: data.error });
+        throw new Error(data.error);
+      }
+      set({ message: data.message, user: data.user });
+    } catch (error) {
+      set({ error: error.message })
+      throw error
+    } finally {
+      set({ isLoading: false })
+    }
   }
 }));

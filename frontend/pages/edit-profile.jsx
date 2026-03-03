@@ -9,7 +9,7 @@ import { FeedbackAlert } from "../components/shared/feedback-alert";
 import { useAuth } from "../store/auth-store";
 
 export default function EditProfile() {
-  const { user } = useAuth()
+  const { user, error, message, updateProfile, isLoading } = useAuth()
   if(!user) return null;
 
   const nameParts = user?.name?.split(" ") || [];
@@ -25,9 +25,6 @@ export default function EditProfile() {
     bio: "",
   });
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -37,12 +34,18 @@ export default function EditProfile() {
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-    }, 800);
+    try {
+      const input = {
+        name: `${formData.firstName} ${formData.lastName}`,
+        phone: formData.phone,
+        location: formData.location,
+        birthDate: formData.dateOfBirth,
+        bio: formData.bio,
+      }
+      await updateProfile(input)
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -68,11 +71,11 @@ export default function EditProfile() {
         </div>
 
         {/* Success Alert */}
-        {showSuccess && (
+        {message && (
           <FeedbackAlert
             type="success"
             title="Profile Updated"
-            message="Your changes have been saved successfully."
+            message={message}
           />
         )}
 
@@ -184,8 +187,8 @@ export default function EditProfile() {
                 </button>
               </Link>
               <div className="flex-1">
-                <GradientButton onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? "Saving..." : "Save Changes"}
+                <GradientButton onClick={handleSave} disabled={isLoading}>
+                  {isLoading ? "Saving..." : "Save Changes"}
                 </GradientButton>
               </div>
             </div>

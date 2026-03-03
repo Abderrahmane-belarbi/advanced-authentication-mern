@@ -36,7 +36,11 @@ const UserSchema = new Schema({
   verificationToken: String,
   verificationTokenExpiresAt: Date,
   verificationResendAvailableAt: Date,
-  authMeta: AuthMetaSchema
+  authMeta: AuthMetaSchema,
+  phone: String,
+  location: String,
+  birthDate: Date,
+  bio: String
 }, { timestamps: true })
 
 const User = model("User", UserSchema);
