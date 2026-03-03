@@ -82,9 +82,7 @@ export default function App() {
         <Route
           path="/edit-profile"
           element={
-            <ProtectRoute>
-              <EditProfile />
-            </ProtectRoute>
+            <EditProfile />
           }
         />
       </Routes>

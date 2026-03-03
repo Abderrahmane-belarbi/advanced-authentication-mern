@@ -6,16 +6,23 @@ import { Link } from "react-router-dom";
 import InputField from "../components/shared/input-field";
 import GradientButton from "../components/gradient-button";
 import { FeedbackAlert } from "../components/shared/feedback-alert";
+import { useAuth } from "../store/auth-store";
 
 export default function EditProfile() {
+  const { user } = useAuth()
+  if(!user) return null;
+
+  const nameParts = user?.name?.split(" ") || [];
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.slice(1).join(" ") || "";
   const [formData, setFormData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    dateOfBirth: "1990-05-15",
-    bio: "Full-stack developer and design enthusiast",
+    firstName,
+    lastName,
+    email: user.email,
+    phone: "",
+    location: "",
+    dateOfBirth: "",
+    bio: "",
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -74,7 +81,7 @@ export default function EditProfile() {
           <div className="space-y-4">
             {/* Name Section */}
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-4">
+              <h2 className="text-lg font-semibold text-foreground mb-3">
                 Name
               </h2>
               <div className="grid gap-4 md:grid-cols-2">
@@ -99,14 +106,14 @@ export default function EditProfile() {
 
             {/* Contact Section */}
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-4">
+              <h2 className="text-lg font-semibold text-foreground mb-3">
                 Contact
               </h2>
               <div className="space-y-2">
                 <InputField
                   name="email"
                   type="email"
-                  placeholder="Email Address"
+                  placeholder="your@email.com"
                   value={formData.email}
                   onChange={handleChange}
                   Icon={Mail}
@@ -114,7 +121,7 @@ export default function EditProfile() {
                 <InputField
                   name="phone"
                   type="tel"
-                  placeholder="Phone Number"
+                  placeholder="+1 (555) 123-4567"
                   value={formData.phone}
                   onChange={handleChange}
                   Icon={Phone}
@@ -124,7 +131,7 @@ export default function EditProfile() {
 
             {/* Location Section */}
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-4">
+              <h2 className="text-lg font-semibold text-foreground mb-3">
                 Location
               </h2>
               <InputField
@@ -139,7 +146,7 @@ export default function EditProfile() {
 
             {/* Date of Birth Section */}
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-4">
+              <h2 className="text-lg font-semibold text-foreground mb-3">
                 Date of Birth
               </h2>
               <InputField
@@ -153,7 +160,7 @@ export default function EditProfile() {
 
             {/* Bio Section */}
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-4">
+              <h2 className="text-lg font-semibold text-foreground mb-3">
                 Bio
               </h2>
               <textarea
