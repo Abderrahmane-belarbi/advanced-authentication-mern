@@ -10,6 +10,7 @@ import Dashboard from "../pages/dashboard.jsx";
 import LoadingSpinner from "../components/shared/loading-spinner.jsx";
 import ForgotPassword from "../pages/forgot-password..jsx";
 import ResetPassword from "../pages/reset-password.jsx";
+import EditProfile from "../pages/edit-profile.jsx";
 
 function RedirectAuthenticatedUser({ children }) {
   const { isAuthenticated, user } = useAuth();
@@ -75,6 +76,14 @@ export default function App() {
           element={
             <ProtectRoute>
               <Dashboard />
+            </ProtectRoute>
+          }
+        />
+        <Route
+          path="/edit-profile"
+          element={
+            <ProtectRoute>
+              <EditProfile />
             </ProtectRoute>
           }
         />

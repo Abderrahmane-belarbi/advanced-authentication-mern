@@ -1,5 +1,4 @@
 import { Calendar, LogOut, Mail, MapPin, Shield } from "lucide-react";
-import { AuthCard } from "../components/auth/auth-card";
 import { Link } from "react-router-dom";
 import { SectionCard } from "../components/shared/section-card";
 import { useAuth } from "../store/auth-store";
@@ -38,27 +37,52 @@ export default function Dashboard() {
           icon={<Shield className="h-6 w-6 text-primary" />}
         >
           <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm text-muted-foreground">
-                  Full Name
-                </label>
-                <p className="mt-1 font-semibold text-foreground">{user.name}</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="text-sm text-muted-foreground">Full Name</label>
+                  <p className="mt-1 font-semibold text-foreground">{user.name}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Email Address
+                  </label>
+                  <p className="mt-1 font-semibold text-foreground">{user.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground">Phone Number</label>
+                  <p className="mt-1 font-semibold text-foreground">+1 (555) 123-4567</p>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Location
+                  </label>
+                  <p className="mt-1 font-semibold text-foreground">San Francisco, CA</p>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Date of Birth
+                  </label>
+                  <p className="mt-1 font-semibold text-foreground">January 15, 1990</p>
+                </div>
               </div>
-              <div>
-                <label className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email Address
-                </label>
-                <p className="mt-1 font-semibold text-foreground">
-                  {user.email}
+
+              {/* Bio Section */}
+              <div className="pt-4 border-t border-border/40">
+                <label className="text-sm text-muted-foreground block mb-2">Bio</label>
+                <p className="text-foreground leading-relaxed">
+                  Passionate developer and designer creating beautiful digital experiences. Coffee enthusiast and open-source contributor.
                 </p>
               </div>
+
+              <Link to="/edit-profile">
+                <button className="text-primary hover:text-secondary transition-colors text-sm font-semibold">
+                  Edit Profile →
+                </button>
+              </Link>
             </div>
-            <button className="text-primary hover:text-secondary transition-colors text-sm font-semibold">
-              Edit Profile →
-            </button>
-          </div>
         </SectionCard>
 
         {/* Account Activity Section */}
