@@ -3,13 +3,19 @@ import { Link } from "react-router-dom";
 import { SectionCard } from "../components/shared/section-card";
 import { useAuth } from "../store/auth-store";
 import { formatDate } from "../lib/utils/format-date";
+import { useEffect } from "react";
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, clearAuthFeedback } = useAuth();
 
   async function handleLogout() {
     await logout();
   }
+
+  useEffect(() => {
+    clearAuthFeedback();
+  }, [clearAuthFeedback])
+  
 
   return (
     <div className="w-full max-w-2xl px-4 py-12">
@@ -60,12 +66,12 @@ export default function Dashboard() {
                   </label>
                   <p className="mt-1 font-semibold text-foreground">{user.location}</p>
                 </div>}
-                { user?.bithDate && <div>
+                { user?.birthDate && <div>
                   <label className="text-sm text-muted-foreground flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     Date of Birth
                   </label>
-                  <p className="mt-1 font-semibold text-foreground">{user.bithDate}</p>
+                  <p className="mt-1 font-semibold text-foreground">{user.birthDate?.split("T")[0]}</p>
                 </div>}
               </div>
 

@@ -19,10 +19,10 @@ export default function EditProfile() {
     firstName,
     lastName,
     email: user.email,
-    phone: user.phone,
-    location: user.location,
-    dateOfBirth: user.birthDate?.split("T")[0] || "",
-    bio: user.bio,
+    phone: user?.phone || "",
+    location: user?.location || "",
+    birthDate: user?.birthDate?.split("T")[0] || "",
+    bio: user?.bio || "",
   });
 
   const handleChange = (e) => {
@@ -39,7 +39,7 @@ export default function EditProfile() {
         name: `${formData.firstName} ${formData.lastName}`,
         phone: formData.phone,
         location: formData.location,
-        birthDate: formData.dateOfBirth,
+        birthDate: formData.birthDate,
         bio: formData.bio,
       }
       await updateProfile(input)
@@ -161,9 +161,9 @@ export default function EditProfile() {
                 Date of Birth
               </h2>
               <InputField
-                name="dateOfBirth"
+                name="birthDate"
                 type="date"
-                value={formData.dateOfBirth}
+                value={formData.birthDate}
                 onChange={handleChange}
                 Icon={Calendar}
               />
