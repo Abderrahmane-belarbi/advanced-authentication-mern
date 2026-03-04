@@ -19,10 +19,10 @@ export default function EditProfile() {
     firstName,
     lastName,
     email: user.email,
-    phone: "",
-    location: "",
-    dateOfBirth: "",
-    bio: "",
+    phone: user.phone,
+    location: user.location,
+    dateOfBirth: user.birthDate?.split("T")[0] || "",
+    bio: user.bio,
   });
 
   const handleChange = (e) => {
@@ -79,6 +79,14 @@ export default function EditProfile() {
           />
         )}
 
+        {error && (
+          <FeedbackAlert
+            type="success"
+            title="Profile Updated"
+            message={error}
+          />
+        )}
+
         {/* Form Card */}
         <div className="rounded-xl border border-border/40 bg-card p-6 backdrop-blur-md">
           <div className="space-y-4">
@@ -118,7 +126,7 @@ export default function EditProfile() {
                   type="email"
                   placeholder="your@email.com"
                   value={formData.email}
-                  onChange={handleChange}
+                  onChange={() => {}}
                   Icon={Mail}
                 />
                 <InputField

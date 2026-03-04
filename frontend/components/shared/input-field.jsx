@@ -14,6 +14,7 @@ export default function InputField({
   required = false,
   spellCheck = false,
   autoCapitalize = "off",
+  ...props
 }) {
   const [toggled, setToggled] = useState("password");
   return (
@@ -25,6 +26,7 @@ export default function InputField({
         </div>
       )}
       <input
+        {...props}
         type={type === "password" ? toggled : type }
         name={name}
         placeholder={placeholder}

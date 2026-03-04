@@ -16,7 +16,7 @@ export default async function updateProfile(req, res) {
     const user = await User.findByIdAndUpdate(
       userId, // filter
       { $set: updates }, // update
-      { new: true }, // return updated document
+      { returnDocument: "after" }, // return updated document
     );
     if (!user) return res.status(404).json({ error: "User not found." });
     return res.status(200).json({ message: "Your changes have been saved successfully.", user });
