@@ -2,7 +2,7 @@ import { Lock, Mail } from "lucide-react";
 import { AuthCard } from "../components/auth/auth-card";
 import InputField from "../components/shared/input-field";
 import GradientButton from "../components/gradient-button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../store/auth-store";
 import { useEffect } from "react";
@@ -11,7 +11,6 @@ import { z } from "zod";
 import { FeedbackAlert } from "../components/shared/feedback-alert";
 
 export default function Login() {
-  const navigate = useNavigate();
   const { login, error, message, isLoading, clearAuthFeedback } = useAuth();
   const [inputErrors, setInputErrors] = useState({
     email: undefined,

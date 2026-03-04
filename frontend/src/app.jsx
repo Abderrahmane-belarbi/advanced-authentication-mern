@@ -1,5 +1,5 @@
 import AnimatedBackground from "../components/animated-background.jsx";
-import { Routes, Route, Navigate, useParams } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "../pages/home.jsx";
 import Login from "../pages/login.jsx";
 import Register from "../pages/register.jsx";
@@ -32,7 +32,7 @@ function ProtectRoute({ children }) {
 }
 
 export default function App() {
-  const { isCheckingAuth, checkAuth, isAuthenticated, user } = useAuth();
+  const { isCheckingAuth, checkAuth } = useAuth();
 
   useEffect(() => {
     checkAuth();
