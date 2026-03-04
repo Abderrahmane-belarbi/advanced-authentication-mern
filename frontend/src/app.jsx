@@ -8,7 +8,7 @@ import { useAuth } from "../store/auth-store.js";
 import { useEffect } from "react";
 import Dashboard from "../pages/dashboard.jsx";
 import LoadingSpinner from "../components/shared/loading-spinner.jsx";
-import ForgotPassword from "../pages/forgot-password..jsx";
+import ForgotPassword from "../pages/forgot-password.jsx";
 import ResetPassword from "../pages/reset-password.jsx";
 import EditProfile from "../pages/edit-profile.jsx";
 

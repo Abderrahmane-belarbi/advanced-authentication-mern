@@ -49,33 +49,33 @@ export default function Dashboard() {
                   </label>
                   <p className="mt-1 font-semibold text-foreground">{user.email}</p>
                 </div>
-                <div>
+                { user?.phone && <div>
                   <label className="text-sm text-muted-foreground">Phone Number</label>
-                  <p className="mt-1 font-semibold text-foreground">+1 (555) 123-4567</p>
-                </div>
-                <div>
+                  <p className="mt-1 font-semibold text-foreground">{user.phone}</p>
+                </div>}
+                { user?.location &&<div>
                   <label className="text-sm text-muted-foreground flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     Location
                   </label>
-                  <p className="mt-1 font-semibold text-foreground">San Francisco, CA</p>
-                </div>
-                <div>
+                  <p className="mt-1 font-semibold text-foreground">{user.location}</p>
+                </div>}
+                { user?.bithDate && <div>
                   <label className="text-sm text-muted-foreground flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     Date of Birth
                   </label>
-                  <p className="mt-1 font-semibold text-foreground">January 15, 1990</p>
-                </div>
+                  <p className="mt-1 font-semibold text-foreground">{user.bithDate}</p>
+                </div>}
               </div>
 
               {/* Bio Section */}
-              <div className="pt-4 border-t border-border/40">
+              { user.bio && <div className="pt-4 border-t border-border/40">
                 <label className="text-sm text-muted-foreground block mb-2">Bio</label>
                 <p className="text-foreground leading-relaxed">
-                  Passionate developer and designer creating beautiful digital experiences. Coffee enthusiast and open-source contributor.
+                  {user.bio}
                 </p>
-              </div>
+              </div>}
 
               <Link to="/edit-profile">
                 <button className="text-primary hover:text-secondary transition-colors text-sm font-semibold">
