@@ -3,7 +3,7 @@ import { model, Schema } from "mongoose"
 const AuthMetaSchema = new Schema({
   login: {
     at: Date,
-    ip: String,
+    ipAddress: String,
     userAgent: String,
     browser: String,
     os: String,

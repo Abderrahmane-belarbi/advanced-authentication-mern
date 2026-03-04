@@ -2,7 +2,7 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import {
-  generateVerifcationToken,
+  generateVerificationToken,
   generateVerificationTokenExpiresAt,
 } from "../utils/generate-verification-token.js";
 import { generateTokenSetCookie } from "../utils/generate-token-cookie.js";
@@ -42,7 +42,7 @@ export async function signup(req, res) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationToken = generateVerifcationToken();
+    const verificationToken = generateVerificationToken();
     const verificationTokenExpiresAt = generateVerificationTokenExpiresAt();
 
     const createdUser = await User.create({
@@ -173,7 +173,7 @@ export async function resendVerificationEmail(req, res) {
       return res.status(429).json({ message: `You can request a new verification code in ${remainingSeconds} second${remainingSeconds > 1 ? 's' : ''}.` });
     }
 
-    const verificationToken = generateVerifcationToken();
+    const verificationToken = generateVerificationToken();
     const verificationTokenExpiresAt = generateVerificationTokenExpiresAt();
 
     user.verificationToken = verificationToken;
