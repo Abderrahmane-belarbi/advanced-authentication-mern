@@ -9,6 +9,11 @@ import { generateTokenSetCookie } from "../utils/generate-token-cookie.js";
 import { UAParser } from "ua-parser-js";
 import { sendMail } from "../config/google-mailer.js";
 
+function getGoogleClient() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.MODE === "development" ? process.env.LOCAL_GOOGLE_REDIRECT_URI : process.env.PUBLIC_GOOGLE_REDIRECT_URI;
+}
 
 export async function checkAuth(req, res) {
   try {

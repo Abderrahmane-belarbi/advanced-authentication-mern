@@ -2,11 +2,11 @@ import { google } from "googleapis";
 
 export async function sendMail({ to, subject, text }) {
   const oauth2Client = new google.auth.OAuth2(
-    process.env.CLIENT_ID,
+    process.env.GOOGLE_CLIENT_ID,
     process.env.CLIENT_SECRET,
     process.env.MODE === "development"
-      ? process.env.LOCAL_REDIRECT_URI
-      : process.env.PUBLIC_REDIRECT_URI
+      ? process.env.LOCAL_GOOGLE_REDIRECT_URI
+      : process.env.PUBLIC_GOOGLE_REDIRECT_URI
   );
 
   // Set the refresh token

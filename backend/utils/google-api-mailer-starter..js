@@ -2,11 +2,11 @@ import { google } from 'googleapis';
 
 app.get("/google", (req, res) => {
   const oauth2Client = new google.auth.OAuth2(
-    process.env.CLIENT_ID,
+    process.env.GOOGLE_CLIENT_ID,
     process.env.CLIENT_SECRET,
     process.env.MODE === "development"
-      ? process.env.LOCAL_REDIRECT_URI
-      : process.env.PUBLIC_REDIRECT_URI
+      ? process.env.LOCAL_GOOGLE_REDIRECT_URI
+      : process.env.PUBLIC_GOOGLE_REDIRECT_URI
   );
 
   const scopes = ['https://www.googleapis.com/auth/gmail.send'];
@@ -27,11 +27,11 @@ app.get("/google/callback", async (req, res) => {
   if (!code) return res.status(400).send("No code returned from Google");
 
   const oauth2Client = new google.auth.OAuth2(
-    process.env.CLIENT_ID,
+    process.env.GOOGLE_CLIENT_ID,
     process.env.CLIENT_SECRET,
     process.env.MODE === "development"
-      ? process.env.LOCAL_REDIRECT_URI
-      : process.env.PUBLIC_REDIRECT_URI
+      ? process.env.LOCAL_GOOGLE_REDIRECT_URI
+      : process.env.PUBLIC_GOOGLE_REDIRECT_URI
   );
 
   try {
