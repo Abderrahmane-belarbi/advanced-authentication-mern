@@ -42,10 +42,19 @@ function getGoogleClient() {
 export async function googleAuthHandler(req, res) {
   try {
     const client = getGoogleClient();
+    const state = crypto.randomBytes(24).toString("hex");
+    res.cookie("google_oauth_state", state, {
+      httpOnly: true,
+      secure: process.env.MODE !== "development",
+      sameSite: "lax",
+      maxAge: 10 * 60 * 1000,
+    });
+
     const url = client.generateAuthUrl({
       access_type: "offline",
       scope: ["openid", "profile", "email"],
       prompt: "consent",
+      state,
     });
     return res.redirect(url);
   } catch (error) {
@@ -55,12 +64,20 @@ export async function googleAuthHandler(req, res) {
 
 export async function googleAuthCallbackHandler(req, res) {
   const code = req.query.code;
-  console.log("code", code);
+  const state = req.query.state;
+  const storedState = req.cookies?.google_oauth_state;
+
   if(!code) return res.status(400).json({ error: "Code not found" });
+  if(!state || !storedState || state !== storedState) {
+    return res.status(400).json({ error: "Invalid OAuth state" });
+  }
+
+  res.clearCookie("google_oauth_state");
+
   try {
     const client = getGoogleClient();
     const { tokens } = await client.getToken(code);
-    if(!tokens) return res.status(400).json({ error: "Tokens not found" });
+    if(!tokens?.id_token) return res.status(400).json({ error: "Google ID token not found" });
     // verify token and read the user info from it
     const ticket = await client.verifyIdToken({
       idToken: tokens.id_token,
@@ -75,7 +92,10 @@ export async function googleAuthCallbackHandler(req, res) {
 
     const userAgent = req.headers["user-agent"];
     const parser = new UAParser(userAgent);
-    const ipAddress = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+    const forwardedFor = req.headers["x-forwarded-for"];
+    const ipAddress = Array.isArray(forwardedFor)
+      ? forwardedFor[0]
+      : (forwardedFor?.split(",")[0]?.trim() || req.socket.remoteAddress);
     const browser = parser.getBrowser().name;
     const os = parser.getOS().name;
     const device = parser.getDevice().type || "desktop";
@@ -83,11 +103,13 @@ export async function googleAuthCallbackHandler(req, res) {
       login: {
         at: new Date(),
         ipAddress,
+        userAgent,
         browser,
         os,
         device
       }
     }
+
     if(!user) {
       const newPassword = crypto.randomBytes(16).toString("hex");
       const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -98,24 +120,34 @@ export async function googleAuthCallbackHandler(req, res) {
         password: hashedPassword,
         isVerified: true,
         picture: payload?.picture,
-        authMeta,
+        authMeta: {
+          ...authMeta,
+          emailVerifiedAt: new Date(),
+        },
       })
     } else {
+      user.authMeta = {
+        ...authMeta,
+        emailVerifiedAt: user.authMeta?.emailVerifiedAt || (user.isVerified ? new Date() : undefined),
+      };
+
       if(!user.isVerified) {
         user.isVerified = true;
         user.verificationToken = undefined;
         user.verificationTokenExpiresAt = undefined;
-        user.authMeta = authMeta;
-        await user.save();
+        user.authMeta.emailVerifiedAt = new Date();
       }
+
+      await user.save();
     }
-    const token = generateTokenSetCookie(res, user._id);
+    generateTokenSetCookie(res, user._id);
+
     return res.status(200).json({ message: "User logged in successfully",
       user: {
         _id: user._id,
         name: user.name,
         email: user.email,
-        avatar: user.avatar,
+        picture: user.picture,
         isVerified: user.isVerified,
         verificationToken: user.verificationToken,
         verificationTokenExpiresAt: user.verificationTokenExpiresAt,
@@ -123,7 +155,7 @@ export async function googleAuthCallbackHandler(req, res) {
       }
     })
   } catch (error) {
-    console.log(error);
+    return res.status(500).json({ error: error.message });
   }
 }
 
