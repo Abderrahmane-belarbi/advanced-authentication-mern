@@ -1,11 +1,15 @@
 import express from "express";
-import { checkAuth, forgotPassword, login, logout, resendVerificationEmail, resetPassword, signup, verificationEmail } from "../controllers/auth-controller.js";
+import { checkAuth, forgotPassword, googleAuthCallbackHandler, googleAuthHandler, login, logout, resendVerificationEmail, resetPassword, signup, verificationEmail } from "../controllers/auth-controller.js";
 import { verifyToken } from "../middleware/verify-token.js";
 import updateProfile from "../controllers/user-controller.js";
 
 const router = express.Router();
 
-router.get("/check-auth", verifyToken, checkAuth)
+router.get("/check-auth", verifyToken, checkAuth);
+
+router.get("/google", googleAuthHandler);
+router.get("/google/callback", googleAuthCallbackHandler);
+
 
 router.post("/signup", signup);
 router.post("/login", login);

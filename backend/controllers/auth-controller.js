@@ -8,12 +8,7 @@ import {
 import { generateTokenSetCookie } from "../utils/generate-token-cookie.js";
 import { UAParser } from "ua-parser-js";
 import { sendMail } from "../config/google-mailer.js";
-
-function getGoogleClient() {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.MODE === "development" ? process.env.LOCAL_GOOGLE_REDIRECT_URI : process.env.PUBLIC_GOOGLE_REDIRECT_URI;
-}
+import { OAuth2Client } from "google-auth-library";
 
 export async function checkAuth(req, res) {
   try {
@@ -29,6 +24,106 @@ export async function checkAuth(req, res) {
     return res
       .status(500)
       .json({ error: error.message });
+  }
+}
+
+function getGoogleClient() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.MODE === "development" ? process.env.LOCAL_GOOGLE_REDIRECT_URI : process.env.PUBLIC_GOOGLE_REDIRECT_URI;
+  if(!clientId || !clientSecret || !redirectUri) throw new Error("Google client credentials not found");
+  return new OAuth2Client({
+    clientId,
+    clientSecret,
+    redirectUri,
+  })
+}
+
+export async function googleAuthHandler(req, res) {
+  try {
+    const client = getGoogleClient();
+    const url = client.generateAuthUrl({
+      access_type: "offline",
+      scope: ["openid", "profile", "email"],
+      prompt: "consent",
+    });
+    return res.redirect(url);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+export async function googleAuthCallbackHandler(req, res) {
+  const code = req.query.code;
+  console.log("code", code);
+  if(!code) return res.status(400).json({ error: "Code not found" });
+  try {
+    const client = getGoogleClient();
+    const { tokens } = await client.getToken(code);
+    if(!tokens) return res.status(400).json({ error: "Tokens not found" });
+    // verify token and read the user info from it
+    const ticket = await client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const email = payload?.email;
+    const emailVerified = payload?.email_verified;
+    if(!email || !emailVerified) return res.status(400).json({ error: "Email not verified" });
+    const emailNormalized = email.toLowerCase().trim();
+    let user = await User.findOne({email: emailNormalized});
+
+    const userAgent = req.headers["user-agent"];
+    const parser = new UAParser(userAgent);
+    const ipAddress = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+    const browser = parser.getBrowser().name;
+    const os = parser.getOS().name;
+    const device = parser.getDevice().type || "desktop";
+    const authMeta = {
+      login: {
+        at: new Date(),
+        ipAddress,
+        browser,
+        os,
+        device
+      }
+    }
+    if(!user) {
+      const newPassword = crypto.randomBytes(16).toString("hex");
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      user = await User.create({
+        name: payload?.name,
+        email: emailNormalized,
+        password: hashedPassword,
+        isVerified: true,
+        picture: payload?.picture,
+        authMeta,
+      })
+    } else {
+      if(!user.isVerified) {
+        user.isVerified = true;
+        user.verificationToken = undefined;
+        user.verificationTokenExpiresAt = undefined;
+        user.authMeta = authMeta;
+        await user.save();
+      }
+    }
+    const token = generateTokenSetCookie(res, user._id);
+    return res.status(200).json({ message: "User logged in successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        isVerified: user.isVerified,
+        verificationToken: user.verificationToken,
+        verificationTokenExpiresAt: user.verificationTokenExpiresAt,
+        authMeta: user.authMeta
+      }
+    })
+  } catch (error) {
+    console.log(error);
   }
 }
 
@@ -338,3 +433,4 @@ export async function resetPassword(req, res) {
       .json({ error: error.message });
   }
 }
+

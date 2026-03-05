@@ -27,6 +27,7 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
+  picture: String,
   isVerified: {
     type: Boolean,
     default: false
