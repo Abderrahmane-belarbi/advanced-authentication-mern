@@ -39,22 +39,14 @@ function getGoogleClient() {
   })
 }
 
+
 export async function googleAuthHandler(req, res) {
   try {
     const client = getGoogleClient();
-    const state = crypto.randomBytes(24).toString("hex");
-    res.cookie("google_oauth_state", state, {
-      httpOnly: true,
-      secure: process.env.MODE !== "development",
-      sameSite: "lax",
-      maxAge: 10 * 60 * 1000,
-    });
-
     const url = client.generateAuthUrl({
       access_type: "offline",
       scope: ["openid", "profile", "email"],
       prompt: "consent",
-      state,
     });
     return res.redirect(url);
   } catch (error) {
@@ -64,16 +56,8 @@ export async function googleAuthHandler(req, res) {
 
 export async function googleAuthCallbackHandler(req, res) {
   const code = req.query.code;
-  const state = req.query.state;
-  const storedState = req.cookies?.google_oauth_state;
-
   if(!code) return res.status(400).json({ error: "Code not found" });
-  if(!state || !storedState || state !== storedState) {
-    return res.status(400).json({ error: "Invalid OAuth state" });
-  }
-
-  res.clearCookie("google_oauth_state");
-
+  
   try {
     const client = getGoogleClient();
     const { tokens } = await client.getToken(code);
