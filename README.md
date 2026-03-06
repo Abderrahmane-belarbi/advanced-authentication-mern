@@ -5,6 +5,29 @@ It provides secure, modern account flows including email/password auth, Google O
 
 ---
 
+## Screenshots
+
+### Home Page
+![Home Page](./docs/images/home.png)
+
+### Login Page
+![Login Page](./docs/images/login.png)
+
+### Signup Page
+![Signup Page](./docs/images/register.png)
+
+### Dashboard
+![Dashboard](./docs/images/dashboard.png)
+
+### Edit Profile Page
+![Edit Profile Page](./docs/images/edit-profile.png)
+
+### Dashboard
+![Forgot Password](./docs/images/forgot-password.png)
+
+### Dashboard
+![Reset Password](./docs/images/reset-password.png)
+
 ## 📌 Overview
 
 This project is designed to demonstrate real-world authentication patterns beyond simple login forms:
