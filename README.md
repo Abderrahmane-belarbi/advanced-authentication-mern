@@ -1,26 +1,76 @@
-# CrewAuth
+# CrewAuth 🔐
 
-A production-style **MERN authentication system** with email verification, secure cookie-based JWT auth, password reset via email, and authentication activity metadata.
+CrewAuth is a production-style full-stack authentication system built with the MERN ecosystem.  
+It provides secure, modern account flows including email/password auth, Google OAuth, email verification, password reset, protected sessions, and profile management.
 
-## Tech Stack
+---
 
-- **Frontend:** React + Vite + Zustand
-- **Backend:** Node.js + Express
-- **Database:** MongoDB + Mongoose
-- **Auth/Security:** JWT (httpOnly cookie), bcrypt
-- **Email:** Nodemailer (SMTP)
-- **Validation:** Zod
+## 📌 Overview
 
-## Features
+This project is designed to demonstrate real-world authentication patterns beyond simple login forms:
 
-- User registration with password hashing
-- Email verification with one-time code + resend cooldown
-- Login/logout with JWT stored in `httpOnly` cookie
-- Protected auth-check endpoint (`/check-auth`)
-- Forgot/reset password flow with expiring token links
-- Auth metadata tracking (last login time, IP, browser, OS, device)
+- cookie-based JWT sessions
+- account verification and recovery by email
+- OAuth with CSRF state protection
+- authentication metadata tracking (IP, browser, OS, device)
+- route guarding and session restoration in the frontend
 
-## Project Structure
+CrewAuth is suitable as:
+
+- a portfolio project
+- a starter auth template for SaaS products
+- a reference implementation for secure MERN authentication flows
+
+---
+
+## ✨ Features
+
+### Authentication
+- User registration with hashed passwords (`bcrypt`)
+- Email verification via one-time code
+- Resend verification code with cooldown
+- Login/logout with JWT in `httpOnly` cookie
+- Forgot password with expiring reset link
+- Reset password using hashed token validation
+- Google OAuth login/signup
+
+### Security & Reliability
+- JWT-protected private routes via middleware
+- `httpOnly` cookie sessions with `sameSite` and production `secure` flag
+- OAuth `state` cookie for CSRF mitigation
+- Generic forgot-password response to reduce account enumeration risk
+- Password reset token stored hashed in database
+
+### User Experience
+- Frontend route protection and redirect logic
+- Session check on app startup
+- Validation utilities (including password criteria)
+- Profile editing endpoint and UI
+- Modern animated UI components
+
+---
+
+## 🧱 Tech Stack
+
+### Frontend
+- React 19 + Vite
+- React Router
+- Zustand (state management)
+- Tailwind CSS 4
+- Framer Motion
+- Zod validation
+
+### Backend
+- Node.js + Express 5
+- MongoDB + Mongoose
+- JWT + cookie-parser + CORS
+- bcryptjs
+- Google Auth Library + Google APIs (OAuth + Gmail API mail sending)
+- UA Parser JS (auth metadata)
+
+---
+
+## 📁 Project Structure
 
 ```txt
 .
@@ -34,107 +84,9 @@ A production-style **MERN authentication system** with email verification, secur
 │   └── utils/
 ├── frontend/
 │   ├── components/
+│   ├── lib/
 │   ├── pages/
-│   ├── store/
-│   └── lib/
-└── package.json
-```
-
-## Environment Variables
-
-Create a `.env` file in the project root:
-
-```env
-PORT=5000
-NODE_ENV=development
-
-MONGODB_URI=mongodb://127.0.0.1:27017/crewauth
-JWT_SECRET=replace_with_a_strong_secret
-CLIENT_URL=http://localhost:3000
-
-SMTP_HOST=smtp.mailtrap.io
-SMTP_PORT=2525
-SMTP_USER=your_smtp_username
-SMTP_PASS=your_smtp_password
-MAIL_FROM="Auth <no-reply@example.com>"
-
-# Optional: preferred for production on hosts that block SMTP ports
-EMAIL_TRANSPORT=auto
-# use resend|smtp|auto (auto = resend first when key exists, otherwise smtp)
-RESEND_API_KEY=re_xxxxxxxxx
-RESEND_EMAIL_FROM="Auth <onboarding@resend.dev>"
-
-VERIFICATION_RESEND_COOLDOWN_SECONDS=60
-```
-
-## Local Development
-
-### 1) Install dependencies
-
-```bash
-npm install
-npm install --prefix frontend
-```
-
-### 2) Run frontend
-
-```bash
-npm run dev --prefix frontend
-```
-
-Frontend runs on `http://localhost:3000`.
-
-### 3) Run backend
-
-```bash
-npm run dev
-```
-
-Backend runs on `http://localhost:5000`.
-
-## Production Build
-
-```bash
-npm run build
-npm start
-```
-
-In production, the Express server serves the built frontend from `frontend/dist`.
-
-## API Endpoints
-
-Base URL: `http://localhost:5000/api/auth`
-
-- `GET /check-auth` (protected)
-- `POST /signup`
-- `POST /login`
-- `POST /logout`
-- `POST /verify-email`
-- `POST /resend-verification-email`
-- `POST /forgot-password`
-- `POST /reset-password/:token`
-
-## Security Notes
-
-- Auth token is issued in an `httpOnly` cookie.
-- `sameSite: "strict"` is used to reduce CSRF risk.
-- Passwords are hashed with bcrypt.
-- Password reset stores only a **hashed** reset token in the database.
-
-## Quick Start Checklist
-
-- [ ] Create `.env`
-- [ ] Start MongoDB
-- [ ] Run backend (`npm run dev`)
-- [ ] Run frontend (`npm run dev --prefix frontend`)
-- [ ] Register a user and verify email
-
----
-
-If you want, I can next help you add:
-
-1. badges,
-2. deployment instructions (Render/Vercel),
-3. architecture diagram,
-4. sample `.env.example`,
-5. contribution and license sections.
+│   ├── src/
+│   └── store/
+├── package.json
+└── README.md
