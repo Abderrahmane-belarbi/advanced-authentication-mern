@@ -39,11 +39,28 @@ function getGoogleClient() {
   })
 }
 
+function setGoogleOAuthStateCookie(res, state) {
+  res.cookie("google_oauth_state", state, {
+    httpOnly: true,
+    secure: process.env.MODE !== "development",
+    sameSite: "lax",
+    maxAge: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+function clearGoogleOAuthStateCookie(res) {
+  res.clearCookie("google_oauth_state", {
+    httpOnly: true,
+    secure: process.env.MODE !== "development",
+    sameSite: "lax",
+  });
+}
 
 export async function googleLoginHandler(req, res) {
   try {
     const client = getGoogleClient();
     const state = crypto.randomBytes(32).toString("hex");
+    setGoogleOAuthStateCookie(res, state);
     const url = client.generateAuthUrl({
       access_type: "offline",
       scope: ["openid", "profile", "email"],
@@ -58,9 +75,15 @@ export async function googleLoginHandler(req, res) {
 
 export async function googleCallbackHandler(req, res) {
   const code = req.query.code;
+  const state = req.query.state;
+  const stateFromCookie = req.cookies?.google_oauth_state;
   if(!code) return res.status(400).json({ error: "Code not found" });
-  
+  if(!state || !stateFromCookie || state !== stateFromCookie) {
+    clearGoogleOAuthStateCookie(res);
+    return res.status(400).json({ error: "Invalid OAuth state" });
+  }
   try {
+    clearGoogleOAuthStateCookie(res);
     const client = getGoogleClient();
     const { tokens } = await client.getToken(code);
     if(!tokens?.id_token) return res.status(400).json({ error: "Google ID token not found" });
