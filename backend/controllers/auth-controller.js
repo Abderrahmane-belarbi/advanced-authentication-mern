@@ -40,13 +40,15 @@ function getGoogleClient() {
 }
 
 
-export async function googleAuthHandler(req, res) {
+export async function googleLoginHandler(req, res) {
   try {
     const client = getGoogleClient();
+    const state = crypto.randomBytes(32).toString("hex");
     const url = client.generateAuthUrl({
       access_type: "offline",
       scope: ["openid", "profile", "email"],
       prompt: "consent",
+      state // for CSRF protection
     });
     return res.redirect(url);
   } catch (error) {
@@ -54,7 +56,7 @@ export async function googleAuthHandler(req, res) {
   }
 }
 
-export async function googleAuthCallbackHandler(req, res) {
+export async function googleCallbackHandler(req, res) {
   const code = req.query.code;
   if(!code) return res.status(400).json({ error: "Code not found" });
   
@@ -68,6 +70,9 @@ export async function googleAuthCallbackHandler(req, res) {
       audience: process.env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
+    if (!payload) {
+      return res.status(400).json({ error: "Invalid Google token payload" });
+    }
     const email = payload?.email;
     const emailVerified = payload?.email_verified;
     if(!email || !emailVerified) return res.status(400).json({ error: "Email not verified" });
@@ -76,10 +81,7 @@ export async function googleAuthCallbackHandler(req, res) {
 
     const userAgent = req.headers["user-agent"];
     const parser = new UAParser(userAgent);
-    const forwardedFor = req.headers["x-forwarded-for"];
-    const ipAddress = Array.isArray(forwardedFor)
-      ? forwardedFor[0]
-      : (forwardedFor?.split(",")[0]?.trim() || req.socket.remoteAddress);
+    const ipAddress = req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress || null;
     const browser = parser.getBrowser().name;
     const os = parser.getOS().name;
     const device = parser.getDevice().type || "desktop";
@@ -94,14 +96,11 @@ export async function googleAuthCallbackHandler(req, res) {
       }
     }
 
-    if(!user) {
-      const newPassword = crypto.randomBytes(16).toString("hex");
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      
+    if(!user) {      
       user = await User.create({
         name: payload?.name,
         email: emailNormalized,
-        password: hashedPassword,
+        password: undefined,
         isVerified: true,
         picture: payload?.picture,
         authMeta: {
@@ -121,23 +120,11 @@ export async function googleAuthCallbackHandler(req, res) {
         user.verificationTokenExpiresAt = undefined;
         user.authMeta.emailVerifiedAt = new Date();
       }
-
       await user.save();
     }
     generateTokenSetCookie(res, user._id);
-
-    return res.status(200).json({ message: "User logged in successfully",
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        picture: user.picture,
-        isVerified: user.isVerified,
-        verificationToken: user.verificationToken,
-        verificationTokenExpiresAt: user.verificationTokenExpiresAt,
-        authMeta: user.authMeta
-      }
-    })
+    const redirectUrl =  `${process.env.MODE === "development" ? process.env.LOCAL_CLIENT_URL : process.env.PUBLIC_CLIENT_URL}/dashboard`
+    return res.redirect(redirectUrl);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }

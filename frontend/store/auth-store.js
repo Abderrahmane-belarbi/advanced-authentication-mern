@@ -48,6 +48,16 @@ export const useAuth = create((set) => ({
       set({ isCheckingAuth: false })
     }
   },
+  googleSign: async() => {
+    set({ isLoading: true, error: null, message: null})
+    try {
+      window.location.href = `${API_URL}/google`
+    } catch (error) {
+      set({ error: error.message });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
   signup: async (email, password, name) => {
     set({ isLoading: true, error: null, message: null });
     try {

@@ -11,7 +11,7 @@ import { z } from "zod";
 import { FeedbackAlert } from "../components/shared/feedback-alert";
 
 export default function Login() {
-  const { login, error, message, isLoading, clearAuthFeedback } = useAuth();
+  const { login, error, message, isLoading, clearAuthFeedback, googleSign } = useAuth();
   const [inputErrors, setInputErrors] = useState({
     email: undefined,
     password: undefined
@@ -95,6 +95,7 @@ export default function Login() {
         >
             Sign in
         </GradientButton>
+        <button type="button" onClick={() => { googleSign() }}>Signin with google</button>
       </form>
       <div className="mt-6 space-y-4 text-center text-sm">
         <Link
