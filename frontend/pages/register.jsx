@@ -8,6 +8,7 @@ import PasswordStrengthChecker from "../components/password-strength-checker";
 import { useAuth } from "../store/auth-store";
 import { registerSchema } from "../lib/validation/user-schema";
 import { z } from "zod";
+import { SocialLoginButton } from "../components/shared/social-login-button";
 
 export default function Register() {
   const [input, setInput] = useState({
@@ -23,7 +24,7 @@ export default function Register() {
     confirmPassword: undefined
   });
 
-  const { signup, clearAuthFeedback, isLoading, error } = useAuth();
+  const { signup, clearAuthFeedback, isLoading, error, googleSign } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -130,12 +131,19 @@ export default function Register() {
         <PasswordStrengthChecker password={input.password} />
 
         <GradientButton
+          className="text-sm"
           isLoading={isLoading}
           onClick={handleRegister}
           type="submit"
         >
           Create Account
         </GradientButton>
+        <div className="flex items-center gap-1">
+          <span className="h-px w-full bg-muted-foreground/20"/>
+          <span className="w-fit shrink-0 text-xs uppercase text-muted-foreground/60">Or continue with</span>
+          <span className="h-px w-full bg-muted-foreground/20"/>
+        </div>
+        <SocialLoginButton isLoading={isLoading} type="button" provider='google' onClick={googleSign} />
       </form>
       <div className="mt-6 space-y-4 text-center text-sm">
         <div className="text-center text-sm">

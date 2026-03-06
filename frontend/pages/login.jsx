@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { loginSchema } from "../lib/validation/user-schema";
 import { z } from "zod";
 import { FeedbackAlert } from "../components/shared/feedback-alert";
-import { GoogleIcon } from "../components/shared/social-icons";
+import { SocialLoginButton } from "../components/shared/social-login-button";
 
 export default function Login() {
   const { login, error, message, isLoading, clearAuthFeedback, googleSign } = useAuth();
@@ -89,6 +89,7 @@ export default function Login() {
         />
 
         <GradientButton
+          className="text-sm"
           type="submit"
           onClick={handleLogin}
           isLoading={isLoading}
@@ -101,26 +102,7 @@ export default function Login() {
           <span className="w-fit shrink-0 text-xs uppercase text-muted-foreground/60">Or continue with</span>
           <span className="h-px w-full bg-muted-foreground/20"/>
         </div>
-        <button
-          type="button"
-          onClick={googleSign}
-          className="
-            w-full
-            flex items-center justify-center gap-3
-            py-3 px-4
-            border border-gray-300
-            rounded-lg
-            bg-white
-            text-sm font-medium
-            hover:bg-gray-50
-            active:scale-[0.98]
-            transition
-            cursor-pointer
-          "
-        >
-          <GoogleIcon />
-          Google
-        </button>
+        <SocialLoginButton isLoading={isLoading} type="button" provider='google' onClick={googleSign} />
       </form>
       <div className="mt-6 space-y-4 text-center text-sm">
         <Link

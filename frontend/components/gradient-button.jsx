@@ -1,12 +1,10 @@
-export default function GradientButton({ children, isLoading ,...props}) {
+export default function GradientButton({ children, isLoading, className="", ...props}) {
   return (
     <button
      {...props}
       className={`h-12 w-full rounded-lg font-semibold text-primary-foreground transition-all 
         duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-default 
-        bg-linear-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/20 cursor-pointer`}
-      onClick={props?.onClick}
-      type={props?.type}
+        bg-linear-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/20 cursor-pointer ${className}`}
     >
       {isLoading ? (
           <div className="flex items-center gap-2">
